@@ -37,7 +37,13 @@ func parseLocs(s string) (string, string, string, string, error) {
 	loc1 := chunks[0]
 	loc2 := chunks[2]
 	loc1split := strings.Split(loc1, ":")
+	if len(loc1split) != 2 {
+		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+	}
 	loc2split := strings.Split(loc2, ":")
+	if len(loc2split) != 2 {
+		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+	}
 	return loc1split[0], loc1split[1], loc2split[0], loc2split[0], nil
 }
 
