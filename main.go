@@ -87,6 +87,19 @@ func plumbFile(file, addr string) error {
 	return msg.Send(port)
 }
 
+func openWin(name string) (*acme.Win, error) {
+	wins, err := acme.Windows()
+	if err != nil {
+		return nil, err
+	}
+	for _, w := range wins {
+		if w.Name == name {
+			return acme.Open(w.ID, nil)
+		}
+	}
+	return nil, nil
+}
+
 func main() {
 	id, err := strconv.Atoi(os.Getenv("winid"))
 	if err != nil {
