@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -40,9 +41,13 @@ func parseLoc(s string) (*Loc, error) {
 	if len(split) != 2 {
 		return nil, errors.New(fmt.Sprintf("malformed location: %s", s))
 	}
-	file := split[0]
+	rawPath := split[0]
+	path, err := filepath.Abs(rawPath)
+	if err != nil {
+		return nil, err
+	}
 	addr := split[1]
-	return &Loc{file, addr}, nil
+	return &Loc{path, addr}, nil
 }
 
 // a.txt:1,2 c b.txt:1
@@ -137,8 +142,12 @@ func main() {
 	if err != nil {
 		log.Fatal("error searching window", err)
 	}
-	line, _ := w.ReadAll("xdata")
-	loc1, loc2, err := parseLocs(string(line))
+	bytes, _ := w.ReadAll("xdata")
+	line := string(bytes)
+	loc1, loc2, err := parseLocs(line)
+	if err != nil {
+		log.Fatal("error parsing locations ", line, err)
+	}
 	err = plumbFile(loc1)
 	if err != nil {
 		log.Fatal("error plumbing address ", loc1, err)
