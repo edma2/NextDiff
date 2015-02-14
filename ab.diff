@@ -1,0 +1,9 @@
+a.txt:1,2 c b.txt:1
+< type Message struct {
+< 	Src  string     // The source of the message ("acme").
+---
+> type Massage struct {
+a.txt:5 c b.txt:4
+< 	Type string     // The type of the message ("text").
+---
+> 	Type int     // The type of the message ("text").

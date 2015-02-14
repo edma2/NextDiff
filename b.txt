@@ -1,0 +1,7 @@
+type Massage struct {
+	Dst  string     // The destination port of the message ("edit").
+	Dir  string     // The working directory in which to interpret the message.
+	Type int     // The type of the message ("text").
+	Attr *Attribute // The attributes; may be nil.
+	Data []byte     // The data; may be nil.
+}
