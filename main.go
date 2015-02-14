@@ -23,15 +23,22 @@ import (
 	"strings"
 
 	"9fans.net/go/acme"
+	"9fans.net/go/plan9"
+	"9fans.net/go/plumb"
 )
 
 // a.txt:1,2 c b.txt:1
-func parseAddrs(s string) (string, string, error) {
-	ss := strings.Split(strings.TrimSpace(s), " ")
-	if len(ss) != 3 {
-		return "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+// => [a.txt 1,2 b.txt 1]
+func parseLocs(s string) (string, string, string, string, error) {
+	chunks := strings.Split(strings.TrimSpace(s), " ")
+	if len(chunks) != 3 {
+		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
 	}
-	return ss[0], ss[2], nil
+	loc1 := chunks[0]
+	loc2 := chunks[2]
+	loc1split := strings.Split(loc1, ":")
+	loc2split := strings.Split(loc2, ":")
+	return loc1split[0], loc1split[1], loc2split[0], loc2split[0], nil
 }
 
 func setAddrToDot(w *acme.Win) error {
@@ -54,8 +61,24 @@ func showAddr(addr string, w *acme.Win) error {
 	return w.Ctl("show\n")
 }
 
-func plumbAddr(a string) error {
-	return nil
+func plumbFile(file, addr string) error {
+	port, err := plumb.Open("send", plan9.OWRITE)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
+		return err
+	}
+	cwd, _ := os.Getwd()
+	defer port.Close()
+	attr := plumb.Attribute{"addr", addr, nil}
+	msg := plumb.Message{
+		Src:  "NextDiff",
+		Dst:  "edit",
+		Dir:  cwd,
+		Type: "text",
+		Attr: &attr,
+		Data: []byte(file),
+	}
+	return msg.Send(port)
 }
 
 func main() {
@@ -77,15 +100,12 @@ func main() {
 		log.Fatal("error searching window", err)
 	}
 	line, _ := w.ReadAll("xdata")
-	a1, a2, err := parseAddrs(string(line))
-	if err != nil {
-		log.Fatal("error parsing address", err)
-	}
-	err = plumbAddr(a1)
+	f1, a1, f2, a2, err := parseLocs(string(line))
+	err = plumbFile(f1, a1)
 	if err != nil {
 		log.Fatal("error plumbing address ", a1, err)
 	}
-	err = plumbAddr(a2)
+	err = plumbFile(f2, a2)
 	if err != nil {
 		log.Fatal("error plumbing address ", a2, err)
 	}
