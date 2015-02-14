@@ -30,7 +30,7 @@ func setAddrToDot(w *acme.Win) error {
 	return w.Ctl("addr=dot\n")
 }
 
-func showNext(addr string, w *acme.Win) error {
+func showAddr(addr string, w *acme.Win) error {
 	err := w.Addr(addr)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func main() {
 	if err != nil {
 		log.Fatal("error setting address to dot", err)
 	}
-	err = showNext(`/^[^\-<>].*\n/`, w)
+	err = showAddr(`/^[^\-<>].*\n/`, w)
 	if err != nil {
 		log.Fatal("error searching window", err)
 	}
