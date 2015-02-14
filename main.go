@@ -27,24 +27,39 @@ import (
 	"9fans.net/go/plumb"
 )
 
+var cwd string
+
+type Loc struct {
+	path string
+	addr string
+}
+
+// a.txt:1,2
+func parseLoc(s string) (*Loc, error) {
+	split := strings.Split(s, ":")
+	if len(split) != 2 {
+		return nil, errors.New(fmt.Sprintf("malformed location: %s", s))
+	}
+	file := split[0]
+	addr := split[1]
+	return &Loc{file, addr}, nil
+}
+
 // a.txt:1,2 c b.txt:1
-// => [a.txt 1,2 b.txt 1]
-func parseLocs(s string) (string, string, string, string, error) {
+func parseLocs(s string) (*Loc, *Loc, error) {
 	chunks := strings.Split(strings.TrimSpace(s), " ")
 	if len(chunks) != 3 {
-		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+		return nil, nil, errors.New(fmt.Sprintf("malformed line: %s", s))
 	}
-	loc1 := chunks[0]
-	loc2 := chunks[2]
-	loc1split := strings.Split(loc1, ":")
-	if len(loc1split) != 2 {
-		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+	loc1, err := parseLoc(chunks[0])
+	if err != nil {
+		return nil, nil, err
 	}
-	loc2split := strings.Split(loc2, ":")
-	if len(loc2split) != 2 {
-		return "", "", "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+	loc2, err := parseLoc(chunks[2])
+	if err != nil {
+		return nil, nil, err
 	}
-	return loc1split[0], loc1split[1], loc2split[0], loc2split[0], nil
+	return loc1, loc2, nil
 }
 
 func setAddrToDot(w *acme.Win) error {
@@ -67,22 +82,21 @@ func showAddr(addr string, w *acme.Win) error {
 	return w.Ctl("show\n")
 }
 
-func plumbFile(file, addr string) error {
+func plumbFile(loc *Loc) error {
 	port, err := plumb.Open("send", plan9.OWRITE)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
 		return err
 	}
-	cwd, _ := os.Getwd()
 	defer port.Close()
-	attr := plumb.Attribute{"addr", addr, nil}
+	attr := plumb.Attribute{"addr", loc.addr, nil}
 	msg := plumb.Message{
 		Src:  "NextDiff",
 		Dst:  "edit",
 		Dir:  cwd,
 		Type: "text",
 		Attr: &attr,
-		Data: []byte(file),
+		Data: []byte(loc.path),
 	}
 	return msg.Send(port)
 }
@@ -101,6 +115,11 @@ func openWin(name string) (*acme.Win, error) {
 }
 
 func main() {
+	var err error
+	cwd, err = os.Getwd()
+	if err != nil {
+		log.Fatal("error getting current working directory", err)
+	}
 	id, err := strconv.Atoi(os.Getenv("winid"))
 	if err != nil {
 		log.Fatal("error getting winid", err)
@@ -119,13 +138,13 @@ func main() {
 		log.Fatal("error searching window", err)
 	}
 	line, _ := w.ReadAll("xdata")
-	f1, a1, f2, a2, err := parseLocs(string(line))
-	err = plumbFile(f1, a1)
+	loc1, loc2, err := parseLocs(string(line))
+	err = plumbFile(loc1)
 	if err != nil {
-		log.Fatal("error plumbing address ", a1, err)
+		log.Fatal("error plumbing address ", loc1, err)
 	}
-	err = plumbFile(f2, a2)
+	err = plumbFile(loc2)
 	if err != nil {
-		log.Fatal("error plumbing address ", a2, err)
+		log.Fatal("error plumbing address ", loc2, err)
 	}
 }
