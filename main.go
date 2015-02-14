@@ -73,5 +73,8 @@ func main() {
 		log.Fatal("error searching window", err)
 	}
 	line, _ := w.ReadAll("xdata")
-	parseAddrs(string(line))
+	a1, a2, err := parseAddrs(string(line))
+	if err != nil {
+		log.Fatal("error parsing address", err)
+	}
 }
