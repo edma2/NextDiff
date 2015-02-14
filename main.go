@@ -114,7 +114,9 @@ func showOrPlumb(loc *Loc) error {
 	if w == nil {
 		return plumbFile(loc)
 	} else {
-		return showAddr(loc.addr, w)
+		err = showAddr(loc.addr, w)
+		w.CloseFiles()
+		return err
 	}
 }
 
