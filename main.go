@@ -106,6 +106,18 @@ func plumbFile(loc *Loc) error {
 	return msg.Send(port)
 }
 
+func showOrPlumb(loc *Loc) error {
+	w, err := openWin(loc.path)
+	if err != nil {
+		return err
+	}
+	if w == nil {
+		return plumbFile(loc)
+	} else {
+		return showAddr(loc.addr, w)
+	}
+}
+
 func openWin(name string) (*acme.Win, error) {
 	wins, err := acme.Windows()
 	if err != nil {
@@ -148,11 +160,11 @@ func main() {
 	if err != nil {
 		log.Fatal("error parsing locations ", line, err)
 	}
-	err = plumbFile(loc1)
+	err = showOrPlumb(loc1)
 	if err != nil {
 		log.Fatal("error plumbing address ", loc1, err)
 	}
-	err = plumbFile(loc2)
+	err = showOrPlumb(loc2)
 	if err != nil {
 		log.Fatal("error plumbing address ", loc2, err)
 	}
