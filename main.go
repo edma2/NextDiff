@@ -54,6 +54,10 @@ func showAddr(addr string, w *acme.Win) error {
 	return w.Ctl("show\n")
 }
 
+func plumbAddr(a string) error {
+	return nil
+}
+
 func main() {
 	id, err := strconv.Atoi(os.Getenv("winid"))
 	if err != nil {
@@ -76,5 +80,13 @@ func main() {
 	a1, a2, err := parseAddrs(string(line))
 	if err != nil {
 		log.Fatal("error parsing address", err)
+	}
+	err = plumbAddr(a1)
+	if err != nil {
+		log.Fatal("error plumbing address ", a1, err)
+	}
+	err = plumbAddr(a2)
+	if err != nil {
+		log.Fatal("error plumbing address ", a2, err)
 	}
 }
