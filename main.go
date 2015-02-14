@@ -15,12 +15,24 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"9fans.net/go/acme"
 )
+
+// a.txt:1,2 c b.txt:1
+func parseAddrs(s string) (string, string, error) {
+	ss := strings.Split(strings.TrimSpace(s), " ")
+	if len(ss) != 3 {
+		return "", "", errors.New(fmt.Sprintf("malformed line: %s", s))
+	}
+	return ss[0], ss[2], nil
+}
 
 func setAddrToDot(w *acme.Win) error {
 	_, _, err := w.ReadAddr() // first read is bogus
@@ -60,4 +72,6 @@ func main() {
 	if err != nil {
 		log.Fatal("error searching window", err)
 	}
+	line, _ := w.ReadAll("xdata")
+	parseAddrs(string(line))
 }
