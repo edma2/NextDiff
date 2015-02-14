@@ -12,6 +12,9 @@
 // and mouse movement within the adiff output.
 //
 // http://ipn.caerwyn.com/2009/05/lab-95-acme-side-by-side-diff.html
+//
+// TODO: handle virtual file paths too.
+// e.g. /Users/ema/src/github.com/edma2/NextDiff@HEAD/main.go:14
 package main
 
 import (
